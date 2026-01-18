@@ -1,0 +1,268 @@
+<?php
+
+use App\Http\Controllers\Admin\AlumniManagementController;
+use App\Http\Controllers\Admin\CmsPageManagementController;
+use App\Http\Controllers\Admin\DepartmentManagementController;
+use App\Http\Controllers\Admin\FeatureManagementController;
+use App\Http\Controllers\Admin\HeroSlideController;
+use App\Http\Controllers\Admin\HomepageSettingController;
+use App\Http\Controllers\Admin\LibraryManagementController;
+use App\Http\Controllers\Admin\NavigationController;
+use App\Http\Controllers\Admin\NewsManagementController;
+use App\Http\Controllers\Admin\PartnerManagementController;
+use App\Http\Controllers\AlumniController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ProgrammeManagementController;
+use App\Http\Controllers\Admin\PromotionalAdManagementController;
+use App\Http\Controllers\Admin\TestimonialManagementController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\VideoManagementController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CmsController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\HeroSlidePublicController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\ProgrammeController;
+use App\Http\Controllers\PromotionalAdController;
+use App\Http\Controllers\ResearchItemController;
+use App\Http\Controllers\LeadershipItemController;
+use App\Http\Controllers\AboutPageSectionController;
+use App\Http\Controllers\TestimonialController;
+use App\Http\Controllers\VideoController;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+
+Route::get('/test', function() {
+    return response()->json(['status' => 'API is working']);
+});
+
+// Health check endpoint for Railway
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now()->toIso8601String(),
+        'database' => DB::connection()->getPdo() ? 'connected' : 'disconnected'
+    ]);
+});
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::get('/departments', [DepartmentController::class, 'index']);
+Route::get('/departments/{department}', [DepartmentController::class, 'show']);
+
+Route::get('/research', [ResearchItemController::class, 'index']);
+Route::get('/research/{researchItem}', [ResearchItemController::class, 'show']);
+Route::get('/research/{researchItem}/download', [ResearchItemController::class, 'download']);
+
+Route::get('/leadership', [LeadershipItemController::class, 'index']);
+
+Route::get('/about-sections', [AboutPageSectionController::class, 'index']);
+Route::get('/about-sections/{pageSlug}', [AboutPageSectionController::class, 'getByPage']);
+
+Route::get('/cms/pages/{slug}', [CmsController::class, 'getPage']);
+Route::get('/cms/sections/{page?}', [CmsController::class, 'getSections']);
+
+Route::get('/news', [NewsController::class, 'index']);
+Route::get('/news/latest', [NewsController::class, 'latest']);
+Route::get('/news/{news}', [NewsController::class, 'show']);
+
+Route::get('/testimonials', [TestimonialController::class, 'index']);
+Route::get('/testimonials/featured', [TestimonialController::class, 'featured']);
+
+Route::get('/programmes', [ProgrammeController::class, 'index']);
+Route::get('/programmes/featured', [ProgrammeController::class, 'featured']);
+Route::get('/programmes/{programme}', [ProgrammeController::class, 'show']);
+
+Route::get('/promotional-ads', [PromotionalAdController::class, 'index']);
+Route::get('/features', [FeatureController::class, 'index']);
+Route::get('/videos', [VideoController::class, 'index']);
+Route::get('/partners', [PartnerController::class, 'index']);
+
+Route::get('/navigation/{location}', [NavigationController::class, 'getPublicMenu']);
+Route::get('/homepage-settings', [HomepageSettingController::class, 'index']);
+Route::get('/hero-slides', [HeroSlidePublicController::class, 'index']);
+Route::get('/library-resources', [\App\Http\Controllers\Admin\LibraryManagementController::class, 'getPublicResources']);
+
+// Alumni Routes
+Route::get('/alumni', [AlumniController::class, 'index']);
+Route::get('/alumni/testimonials', [AlumniController::class, 'testimonials']);
+Route::post('/alumni/register', [AlumniController::class, 'register']);
+Route::post('/alumni/testimonials', [AlumniController::class, 'storeTestimonial']);
+Route::post('/alumni/testimonials/{testimonial}/interact', [AlumniController::class, 'interactTestimonial']);
+Route::get('/alumni/{alumni}', [AlumniController::class, 'show']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+    
+    Route::post('/research', [ResearchItemController::class, 'store']);
+    Route::post('/research/{researchItem}/approve', [ResearchItemController::class, 'approve']);
+    Route::post('/research/{researchItem}/reject', [ResearchItemController::class, 'reject']);
+    
+    Route::get('/analytics/dashboard', [AnalyticsController::class, 'dashboard']);
+    
+    Route::post('/cms/pages', [CmsController::class, 'storePage']);
+    Route::put('/cms/sections/{section}', [CmsController::class, 'updateSection']);
+    
+    Route::prefix('admin')->group(function () {
+        Route::get('/users', [UserManagementController::class, 'index']);
+        Route::get('/users/stats', [UserManagementController::class, 'stats']);
+        Route::get('/users/{user}', [UserManagementController::class, 'show']);
+        Route::post('/users', [UserManagementController::class, 'store']);
+        Route::put('/users/{user}', [UserManagementController::class, 'update']);
+        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']);
+        Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus']);
+        Route::patch('/users/{user}/role', [UserManagementController::class, 'updateRole']);
+        
+        Route::get('/permissions', [PermissionController::class, 'index']);
+        Route::post('/permissions', [PermissionController::class, 'store']);
+        Route::put('/permissions/{permission}', [PermissionController::class, 'update']);
+        Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy']);
+        
+        Route::get('/navigation/menus', [NavigationController::class, 'indexMenus']);
+        Route::get('/navigation/menus/{menu}', [NavigationController::class, 'showMenu']);
+        Route::post('/navigation/menus', [NavigationController::class, 'storeMenu']);
+        Route::put('/navigation/menus/{menu}', [NavigationController::class, 'updateMenu']);
+        Route::delete('/navigation/menus/{menu}', [NavigationController::class, 'destroyMenu']);
+        
+        Route::get('/navigation/menus/{menu}/items', [NavigationController::class, 'indexItems']);
+        Route::post('/navigation/menus/{menu}/items', [NavigationController::class, 'storeItem']);
+        Route::put('/navigation/items/{item}', [NavigationController::class, 'updateItem']);
+        Route::delete('/navigation/items/{item}', [NavigationController::class, 'destroyItem']);
+        Route::post('/navigation/menus/{menu}/reorder', [NavigationController::class, 'reorderItems']);
+        
+        Route::get('/manage-programmes', [ProgrammeManagementController::class, 'index']);
+        Route::get('/manage-programmes/stats', [ProgrammeManagementController::class, 'stats']);
+        Route::get('/manage-programmes/{programme}', [ProgrammeManagementController::class, 'show']);
+        Route::post('/manage-programmes', [ProgrammeManagementController::class, 'store']);
+        Route::put('/manage-programmes/{programme}', [ProgrammeManagementController::class, 'update']);
+        Route::delete('/manage-programmes/{programme}', [ProgrammeManagementController::class, 'destroy']);
+        Route::patch('/manage-programmes/{programme}/toggle-status', [ProgrammeManagementController::class, 'toggleStatus']);
+        Route::patch('/manage-programmes/{programme}/toggle-featured', [ProgrammeManagementController::class, 'toggleFeatured']);
+        Route::post('/manage-programmes/reorder', [ProgrammeManagementController::class, 'reorder']);
+        
+        Route::get('/manage-news', [NewsManagementController::class, 'index']);
+        Route::get('/manage-news/stats', [NewsManagementController::class, 'stats']);
+        Route::post('/manage-news', [NewsManagementController::class, 'store']);
+        Route::get('/manage-news/{id}', [NewsManagementController::class, 'show']);
+        Route::post('/manage-news/{id}/update', [NewsManagementController::class, 'update']);
+        Route::delete('/manage-news/{id}', [NewsManagementController::class, 'destroy']);
+        Route::patch('/manage-news/{id}/status', [NewsManagementController::class, 'updateStatus']);
+        
+        Route::get('/manage-testimonials', [TestimonialManagementController::class, 'index']);
+        Route::get('/manage-testimonials/stats', [TestimonialManagementController::class, 'stats']);
+        Route::post('/manage-testimonials', [TestimonialManagementController::class, 'store']);
+        Route::get('/manage-testimonials/{id}', [TestimonialManagementController::class, 'show']);
+        Route::post('/manage-testimonials/{id}/update', [TestimonialManagementController::class, 'update']);
+        Route::delete('/manage-testimonials/{id}', [TestimonialManagementController::class, 'destroy']);
+        Route::patch('/manage-testimonials/{id}/toggle-status', [TestimonialManagementController::class, 'toggleStatus']);
+        Route::patch('/manage-testimonials/{id}/toggle-featured', [TestimonialManagementController::class, 'toggleFeatured']);
+        Route::post('/manage-testimonials/reorder', [TestimonialManagementController::class, 'reorder']);
+        
+        Route::get('/manage-videos', [VideoManagementController::class, 'index']);
+        Route::get('/manage-videos/stats', [VideoManagementController::class, 'stats']);
+        Route::post('/manage-videos', [VideoManagementController::class, 'store']);
+        Route::get('/manage-videos/{id}', [VideoManagementController::class, 'show']);
+        Route::post('/manage-videos/{id}/update', [VideoManagementController::class, 'update']);
+        Route::delete('/manage-videos/{id}', [VideoManagementController::class, 'destroy']);
+        Route::patch('/manage-videos/{id}/toggle-status', [VideoManagementController::class, 'toggleStatus']);
+        Route::post('/manage-videos/reorder', [VideoManagementController::class, 'reorder']);
+        
+        Route::get('/manage-alumni', [AlumniManagementController::class, 'index']);
+        Route::get('/manage-alumni/stats', [AlumniManagementController::class, 'stats']);
+        Route::post('/manage-alumni/{id}/approve', [AlumniManagementController::class, 'approve']);
+        Route::post('/manage-alumni/{id}/reject', [AlumniManagementController::class, 'reject']);
+        Route::post('/manage-alumni/{id}/toggle-featured', [AlumniManagementController::class, 'toggleFeatured']);
+        Route::post('/manage-alumni/{id}/update', [AlumniManagementController::class, 'update']);
+        Route::put('/manage-alumni/{id}', [AlumniManagementController::class, 'update']);
+        Route::delete('/manage-alumni/{id}', [AlumniManagementController::class, 'destroy']);
+        
+        Route::get('/manage-promotional-ads', [PromotionalAdManagementController::class, 'index']);
+        Route::get('/manage-promotional-ads/stats', [PromotionalAdManagementController::class, 'stats']);
+        Route::post('/manage-promotional-ads', [PromotionalAdManagementController::class, 'store']);
+        Route::get('/manage-promotional-ads/{id}', [PromotionalAdManagementController::class, 'show']);
+        Route::post('/manage-promotional-ads/{id}/update', [PromotionalAdManagementController::class, 'update']);
+        Route::delete('/manage-promotional-ads/{id}', [PromotionalAdManagementController::class, 'destroy']);
+        Route::patch('/manage-promotional-ads/{id}/toggle-status', [PromotionalAdManagementController::class, 'toggleStatus']);
+        Route::post('/manage-promotional-ads/reorder', [PromotionalAdManagementController::class, 'reorder']);
+        
+        Route::get('/manage-partners', [PartnerManagementController::class, 'index']);
+        Route::get('/manage-partners/stats', [PartnerManagementController::class, 'stats']);
+        Route::post('/manage-partners', [PartnerManagementController::class, 'store']);
+        Route::get('/manage-partners/{id}', [PartnerManagementController::class, 'show']);
+        Route::post('/manage-partners/{id}/update', [PartnerManagementController::class, 'update']);
+        Route::delete('/manage-partners/{id}', [PartnerManagementController::class, 'destroy']);
+        Route::patch('/manage-partners/{id}/toggle-status', [PartnerManagementController::class, 'toggleStatus']);
+        Route::post('/manage-partners/reorder', [PartnerManagementController::class, 'reorder']);
+        
+        Route::get('/manage-features', [FeatureManagementController::class, 'index']);
+        Route::get('/manage-features/stats', [FeatureManagementController::class, 'stats']);
+        Route::post('/manage-features', [FeatureManagementController::class, 'store']);
+        Route::get('/manage-features/{id}', [FeatureManagementController::class, 'show']);
+        Route::post('/manage-features/{id}/update', [FeatureManagementController::class, 'update']);
+        Route::delete('/manage-features/{id}', [FeatureManagementController::class, 'destroy']);
+        Route::patch('/manage-features/{id}/toggle-status', [FeatureManagementController::class, 'toggleStatus']);
+        Route::post('/manage-features/reorder', [FeatureManagementController::class, 'reorder']);
+        
+        Route::get('/manage-hero-slides', [HeroSlideController::class, 'index']);
+        Route::get('/manage-hero-slides/stats', [HeroSlideController::class, 'stats']);
+        Route::post('/manage-hero-slides', [HeroSlideController::class, 'store']);
+        Route::get('/manage-hero-slides/{id}', [HeroSlideController::class, 'show']);
+        Route::post('/manage-hero-slides/{id}/update', [HeroSlideController::class, 'update']);
+        Route::delete('/manage-hero-slides/{id}', [HeroSlideController::class, 'destroy']);
+        Route::patch('/manage-hero-slides/{id}/toggle-status', [HeroSlideController::class, 'toggleStatus']);
+        Route::post('/manage-hero-slides/reorder', [HeroSlideController::class, 'reorder']);
+        
+        Route::get('/cms-pages', [CmsPageManagementController::class, 'index']);
+        Route::get('/cms-pages/stats', [CmsPageManagementController::class, 'stats']);
+        Route::post('/cms-pages', [CmsPageManagementController::class, 'store']);
+        Route::get('/cms-pages/{id}', [CmsPageManagementController::class, 'show']);
+        Route::post('/cms-pages/{id}/update', [CmsPageManagementController::class, 'update']);
+        Route::delete('/cms-pages/{id}', [CmsPageManagementController::class, 'destroy']);
+        
+        Route::get('/cms-pages/{slug}/sections', [CmsPageManagementController::class, 'getSections']);
+        Route::post('/cms-sections/{id}/update', [CmsPageManagementController::class, 'updateSection']);
+        
+        Route::get('/homepage-settings', [HomepageSettingController::class, 'index']);
+        Route::post('/homepage-settings/{id}/update', [HomepageSettingController::class, 'update']);
+        Route::post('/homepage-settings/bulk-update', [HomepageSettingController::class, 'updateBulk']);
+        
+        // Department Management Routes
+        Route::get('/manage-departments', [DepartmentManagementController::class, 'index']);
+        Route::post('/manage-departments', [DepartmentManagementController::class, 'store']);
+        Route::post('/manage-departments/reorder', [DepartmentManagementController::class, 'updateOrder']);
+        Route::get('/manage-departments/{id}', [DepartmentManagementController::class, 'show'])->whereNumber('id');
+        Route::post('/manage-departments/{id}/update', [DepartmentManagementController::class, 'update'])->whereNumber('id');
+        Route::delete('/manage-departments/{id}', [DepartmentManagementController::class, 'destroy'])->whereNumber('id');
+        
+        // Library Management Routes
+        Route::get('/manage-library-resources', [LibraryManagementController::class, 'index']);
+        Route::get('/manage-library-resources/stats', [LibraryManagementController::class, 'stats']);
+        Route::post('/manage-library-resources', [LibraryManagementController::class, 'store']);
+        Route::get('/manage-library-resources/{id}', [LibraryManagementController::class, 'show']);
+        Route::post('/manage-library-resources/{id}/update', [LibraryManagementController::class, 'update']);
+        Route::delete('/manage-library-resources/{id}', [LibraryManagementController::class, 'destroy']);
+        Route::patch('/manage-library-resources/{id}/toggle-status', [LibraryManagementController::class, 'toggleStatus']);
+        Route::patch('/manage-library-resources/{id}/toggle-featured', [LibraryManagementController::class, 'toggleFeatured']);
+        Route::post('/manage-library-resources/update-sort-order', [LibraryManagementController::class, 'updateSortOrder']);
+        
+        // Leadership Management Routes
+        Route::get('/manage-leadership', [LeadershipItemController::class, 'index']);
+        Route::post('/manage-leadership', [LeadershipItemController::class, 'store']);
+        Route::get('/manage-leadership/{id}', [LeadershipItemController::class, 'show']);
+        Route::post('/manage-leadership/{id}', [LeadershipItemController::class, 'update']);
+        Route::delete('/manage-leadership/{id}', [LeadershipItemController::class, 'destroy']);
+        Route::post('/manage-leadership/reorder', [LeadershipItemController::class, 'reorder']);
+        
+        // About Page Sections Management Routes
+        Route::get('/manage-about-sections', [AboutPageSectionController::class, 'index']);
+        Route::post('/manage-about-sections', [AboutPageSectionController::class, 'store']);
+        Route::get('/manage-about-sections/{id}', [AboutPageSectionController::class, 'show']);
+        Route::post('/manage-about-sections/{id}', [AboutPageSectionController::class, 'update']);
+        Route::delete('/manage-about-sections/{id}', [AboutPageSectionController::class, 'destroy']);
+    });
+});

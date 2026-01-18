@@ -1,0 +1,14 @@
+{
+  "name": "seed-academic-calendar",
+  "version": "1.0.0",
+  "description": "Seed academic calendar database with dummy data",
+  "main": "seed-academic-calendar.js",
+  "scripts": {
+    "seed": "node seed-academic-calendar.js",
+    "seed:dev": "NODE_ENV=development node seed-academic-calendar.js"
+  },
+  "dependencies": {
+    "mongoose": "^7.0.0",
+    "dotenv": "^16.0.0"
+  }
+}

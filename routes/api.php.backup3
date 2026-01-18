@@ -1,0 +1,106 @@
+<?php
+
+use App\Http\Controllers\Admin\NavigationController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ProgrammeManagementController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CmsController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\ProgrammeController;
+use App\Http\Controllers\PromotionalAdController;
+use App\Http\Controllers\ResearchItemController;
+use App\Http\Controllers\TestimonialController;
+use App\Http\Controllers\VideoController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/test', function() {
+    return response()->json(['status' => 'API is working']);
+});
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::get('/departments', [DepartmentController::class, 'index']);
+Route::get('/departments/{department}', [DepartmentController::class, 'show']);
+
+Route::get('/research', [ResearchItemController::class, 'index']);
+Route::get('/research/{researchItem}', [ResearchItemController::class, 'show']);
+Route::get('/research/{researchItem}/download', [ResearchItemController::class, 'download']);
+
+Route::get('/cms/pages/{slug}', [CmsController::class, 'getPage']);
+Route::get('/cms/sections/{page?}', [CmsController::class, 'getSections']);
+
+Route::get('/news', [NewsController::class, 'index']);
+Route::get('/news/latest', [NewsController::class, 'latest']);
+Route::get('/news/{news}', [NewsController::class, 'show']);
+
+Route::get('/testimonials', [TestimonialController::class, 'index']);
+Route::get('/testimonials/featured', [TestimonialController::class, 'featured']);
+
+Route::get('/programmes', [ProgrammeController::class, 'index']);
+Route::get('/programmes/featured', [ProgrammeController::class, 'featured']);
+Route::get('/programmes/{programme}', [ProgrammeController::class, 'show']);
+
+Route::get('/promotional-ads', [PromotionalAdController::class, 'index']);
+Route::get('/features', [FeatureController::class, 'index']);
+Route::get('/videos', [VideoController::class, 'index']);
+Route::get('/partners', [PartnerController::class, 'index']);
+
+Route::get('/navigation/{location}', [NavigationController::class, 'getPublicMenu']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+    
+    Route::post('/research', [ResearchItemController::class, 'store']);
+    Route::post('/research/{researchItem}/approve', [ResearchItemController::class, 'approve']);
+    Route::post('/research/{researchItem}/reject', [ResearchItemController::class, 'reject']);
+    
+    Route::get('/analytics/dashboard', [AnalyticsController::class, 'dashboard']);
+    
+    Route::post('/cms/pages', [CmsController::class, 'storePage']);
+    Route::put('/cms/sections/{section}', [CmsController::class, 'updateSection']);
+    
+    Route::prefix('admin')->group(function () {
+        Route::get('/users', [UserManagementController::class, 'index']);
+        Route::get('/users/stats', [UserManagementController::class, 'stats']);
+        Route::get('/users/{user}', [UserManagementController::class, 'show']);
+        Route::post('/users', [UserManagementController::class, 'store']);
+        Route::put('/users/{user}', [UserManagementController::class, 'update']);
+        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']);
+        Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus']);
+        Route::patch('/users/{user}/role', [UserManagementController::class, 'updateRole']);
+        
+        Route::get('/permissions', [PermissionController::class, 'index']);
+        Route::post('/permissions', [PermissionController::class, 'store']);
+        Route::put('/permissions/{permission}', [PermissionController::class, 'update']);
+        Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy']);
+        
+        Route::get('/navigation/menus', [NavigationController::class, 'indexMenus']);
+        Route::get('/navigation/menus/{menu}', [NavigationController::class, 'showMenu']);
+        Route::post('/navigation/menus', [NavigationController::class, 'storeMenu']);
+        Route::put('/navigation/menus/{menu}', [NavigationController::class, 'updateMenu']);
+        Route::delete('/navigation/menus/{menu}', [NavigationController::class, 'destroyMenu']);
+        
+        Route::get('/navigation/menus/{menu}/items', [NavigationController::class, 'indexItems']);
+        Route::post('/navigation/menus/{menu}/items', [NavigationController::class, 'storeItem']);
+        Route::put('/navigation/items/{item}', [NavigationController::class, 'updateItem']);
+        Route::delete('/navigation/items/{item}', [NavigationController::class, 'destroyItem']);
+        Route::post('/navigation/menus/{menu}/reorder', [NavigationController::class, 'reorderItems']);
+        
+        Route::get('/programmes', [ProgrammeManagementController::class, 'index']);
+        Route::get('/programmes/stats', [ProgrammeManagementController::class, 'stats']);
+        Route::get('/programmes/{programme}', [ProgrammeManagementController::class, 'show']);
+        Route::post('/programmes', [ProgrammeManagementController::class, 'store']);
+        Route::put('/programmes/{programme}', [ProgrammeManagementController::class, 'update']);
+        Route::delete('/programmes/{programme}', [ProgrammeManagementController::class, 'destroy']);
+        Route::patch('/programmes/{programme}/toggle-status', [ProgrammeManagementController::class, 'toggleStatus']);
+        Route::patch('/programmes/{programme}/toggle-featured', [ProgrammeManagementController::class, 'toggleFeatured']);
+        Route::post('/programmes/reorder', [ProgrammeManagementController::class, 'reorder']);
+    });
+});
